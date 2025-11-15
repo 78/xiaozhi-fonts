@@ -108,7 +108,7 @@ icon_mapping = {
     "headphones": 0xf025,
     "microphone": 0xf130,
     "microphone_slash": 0xf131,
-    "comment_dot": 0xe6dc,
+    # "comment_dot": 0xe6dc,
     "comment_question": 0xe14b,
     "camera": 0xf030,
     "calendar": 0xf133,
@@ -173,8 +173,8 @@ def parse_arguments():
 
 def get_font_file(font_size):
     if font_size == 30:
-        return "./tmp/fa-light-300.ttf"
-    return "./tmp/fa-regular-400.ttf"
+        return "./tmp/fa-light-300.otf"
+    return "./tmp/fa-regular-400.otf"
 
 def main():
     args = parse_arguments()

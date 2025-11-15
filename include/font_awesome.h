@@ -98,7 +98,6 @@ typedef struct {
 #define FONT_AWESOME_HEADPHONES "\xef\x80\xa5"
 #define FONT_AWESOME_MICROPHONE "\xef\x84\xb0"
 #define FONT_AWESOME_MICROPHONE_SLASH "\xef\x84\xb1"
-#define FONT_AWESOME_COMMENT_DOT "\xee\x9b\x9c"
 #define FONT_AWESOME_COMMENT_QUESTION "\xee\x85\x8b"
 #define FONT_AWESOME_CAMERA "\xef\x80\xb0"
 #define FONT_AWESOME_CALENDAR "\xef\x84\xb3"

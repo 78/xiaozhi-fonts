@@ -89,7 +89,6 @@ const font_awesome_symbol_t font_awesome_symbols[] = {
     {"headphones", "\xef\x80\xa5"},
     {"microphone", "\xef\x84\xb0"},
     {"microphone_slash", "\xef\x84\xb1"},
-    {"comment_dot", "\xee\x9b\x9c"},
     {"comment_question", "\xee\x85\x8b"},
     {"camera", "\xef\x80\xb0"},
     {"calendar", "\xef\x84\xb3"},
