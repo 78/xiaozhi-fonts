@@ -5,6 +5,8 @@ import shutil
 emoji_configs = [
     (32, 'RGB565A8'),  # 32x32
     (64, 'RGB565A8'),  # 64x64
+    (128, 'RGB565A8'),  # 128x128
+    (256, 'RGB565A8'),  # 256x256
 ]
 
 def main():
