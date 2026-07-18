@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "family": "noto",
+  "bundle_id": "noto-v1",
+  "tokenizer": {
+    "model": "deepseek-ai/DeepSeek-V4-Flash",
+    "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/resolve/main/tokenizer.json",
+    "core_vocab_only": true
+  },
+  "text_profiles": [
+    {"name": "14_1", "size": 14, "bpp": 1, "variant": "extra_light", "autohint": "off", "full_max_glyph_height_units": 1100, "line_height": 16, "base_line": 2, "fit_line_box": true},
+    {"name": "16_4", "size": 16, "bpp": 4},
+    {"name": "20_4", "size": 20, "bpp": 4},
+    {"name": "30_4", "size": 30, "bpp": 4}
+  ],
+  "icon_profiles": [
+    {"name": "14_1", "size": 14, "bpp": 1, "variant": "extra_light", "line_height": 16, "base_line": 2, "fit_line_box": true},
+    {"name": "16_4", "size": 16, "bpp": 4},
+    {"name": "20_4", "size": 20, "bpp": 4},
+    {"name": "30_1", "size": 30, "bpp": 1},
+    {"name": "30_4", "size": 30, "bpp": 4}
+  ],
+  "emoji_font_profiles": [
+    {"name": "30_1", "size": 30, "bpp": 1},
+    {"name": "30_4", "size": 30, "bpp": 4}
+  ],
+  "color_emoji_sizes": [32, 64, 128],
+  "text_sources": [
+    {"id": "latin", "path": "source/Noto_Sans/static/NotoSans-Regular.ttf", "extra_light_path": "source/Noto_Sans/static/NotoSans-ExtraLight.ttf"},
+    {"id": "cjk_sc", "path": "source/Noto_Sans_SC/static/NotoSansSC-Regular.ttf", "extra_light_path": "source/Noto_Sans_SC/static/NotoSansSC-ExtraLight.ttf"},
+    {"id": "cjk_tc", "path": "source/Noto_Sans_TC/static/NotoSansTC-Regular.ttf", "extra_light_path": "source/Noto_Sans_TC/static/NotoSansTC-ExtraLight.ttf"},
+    {"id": "cjk_jp", "path": "source/Noto_Sans_JP/static/NotoSansJP-Regular.ttf", "extra_light_path": "source/Noto_Sans_JP/static/NotoSansJP-ExtraLight.ttf"},
+    {"id": "cjk_kr", "path": "source/Noto_Sans_KR/static/NotoSansKR-Regular.ttf", "extra_light_path": "source/Noto_Sans_KR/static/NotoSansKR-ExtraLight.ttf"},
+    {"id": "thai", "path": "source/Noto_Sans_Thai/static/NotoSansThai-Regular.ttf", "extra_light_path": "source/Noto_Sans_Thai/static/NotoSansThai-ExtraLight.ttf"},
+    {"id": "arabic", "path": "source/Noto_Sans_Arabic/static/NotoSansArabic-Regular.ttf", "extra_light_path": "source/Noto_Sans_Arabic/static/NotoSansArabic-ExtraLight.ttf"}
+  ],
+  "material_fonts": {
+    "regular": "source/MaterialSymbolsOutlined/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght]-400.ttf",
+    "extra_light": "source/MaterialSymbolsOutlined/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght]-200.ttf"
+  },
+  "mono_emoji_font": "source/Noto_Emoji/static/NotoEmoji-Regular.ttf",
+  "color_emoji_font": "source/Noto_Color_Emoji/NotoColorEmoji-Regular.ttf"
+}

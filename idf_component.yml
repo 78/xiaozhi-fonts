@@ -1,0 +1,7 @@
+version: "0.1.0"
+description: Noto text, emoji, and Material Symbols assets for XiaoZhi
+url: https://github.com/78/noto-fonts
+dependencies:
+  idf: ">=5.5.2"
+  lvgl/lvgl: "~9.5.0"
+
