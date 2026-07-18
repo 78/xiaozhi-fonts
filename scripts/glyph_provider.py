@@ -8,6 +8,7 @@ import base64
 import bisect
 import json
 import struct
+import threading
 from pathlib import Path
 
 
@@ -16,6 +17,8 @@ CMAP_SPARSE_FULL = 1
 CMAP_FORMAT0_TINY = 2
 CMAP_SPARSE_TINY = 3
 BITMAP_FORMAT_PLAIN = 0
+MAX_GLYPHS = 64
+MAX_BITMAP_BYTES = 64 * 1024
 
 
 class CbinFont:
@@ -119,7 +122,20 @@ class FullGlyphProvider:
             name: set(value["codepoints"])
             for name, value in self.manifest["charsets"].items() if value is not None
         }
+        self.profiles = {
+            (profile["size"], profile["bpp"])
+            for profile in self.manifest["profiles"]
+        }
         self.fonts: dict[tuple[str, str], CbinFont] = {}
+        self._font_lock = threading.Lock()
+
+    def supports(self, bundle: str, charset: str, size: int, bpp: int) -> bool:
+        """Return whether a device capability can use this full bundle."""
+        return (
+            bundle == self.bundle
+            and charset in self.charsets
+            and (size, bpp) in self.profiles
+        )
 
     @staticmethod
     def _in_ranges(codepoint: int, ranges: list[list[int]]) -> bool:
@@ -132,9 +148,11 @@ class FullGlyphProvider:
                 continue
             key = (shard["id"], profile)
             if key not in self.fonts:
-                font = CbinFont.from_file(self.root / shard["profiles"][profile])
-                font.assert_wire_compatible()
-                self.fonts[key] = font
+                with self._font_lock:
+                    if key not in self.fonts:
+                        font = CbinFont.from_file(self.root / shard["profiles"][profile])
+                        font.assert_wire_compatible()
+                        self.fonts[key] = font
             return self.fonts[key]
         return None
 
@@ -145,9 +163,12 @@ class FullGlyphProvider:
             raise ValueError(f"unknown device charset: {charset}")
         if size <= 0 or bpp not in (1, 4):
             raise ValueError("size must be positive and bpp must be 1 or 4")
+        if (size, bpp) not in self.profiles:
+            raise ValueError(f"unsupported font profile: {size}_{bpp}")
         device_charset = self.charsets[charset]
         glyphs = []
         seen = set()
+        total_bitmap_bytes = 0
         for char in text:
             codepoint = ord(char)
             if codepoint < 0x20 or codepoint in seen or codepoint in device_charset:
@@ -160,10 +181,17 @@ class FullGlyphProvider:
                 raise ValueError(f"font bpp mismatch: expected {bpp}, found {font.bpp}")
             glyph = font.glyph(codepoint)
             if glyph is not None:
+                bitmap_bytes = (glyph["box_w"] * glyph["box_h"] * bpp + 7) // 8
+                if (
+                    len(glyphs) >= MAX_GLYPHS
+                    or total_bitmap_bytes + bitmap_bytes > MAX_BITMAP_BYTES
+                ):
+                    break
                 glyphs.append(glyph)
+                total_bitmap_bytes += bitmap_bytes
         if not glyphs:
             return None
-        return {"v": 1, "bundle": self.bundle, "size": size, "bpp": bpp, "items": glyphs}
+        return {"v": 1, "bundle": self.bundle, "size": size, "bpp": bpp, "glyphs": glyphs}
 
 
 def main() -> int:

@@ -324,6 +324,17 @@ def profiles_for(manifest: dict, key: str, selected: set[str] | None) -> list[di
     return [profile for profile in profiles if profile["name"] in selected]
 
 
+def profile_names_for_size(
+    manifest: dict, keys: list[str], size: int, bpp: int
+) -> set[str]:
+    return {
+        profile["name"]
+        for key in keys
+        for profile in manifest[key]
+        if profile["size"] == size and profile["bpp"] == bpp
+    }
+
+
 def file_digest(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as source:
@@ -725,8 +736,12 @@ def main() -> int:
     parser.add_argument("target", choices=["charsets", "basic", "common", "icons", "emoji", "full", "all"])
     parser.add_argument("--locale-dir", type=Path, default=PROJECT_ROOT / "main" / "assets" / "locales")
     parser.add_argument(
-        "--profile", action="append",
-        help="generate only the named font profile; may be repeated",
+        "--size", type=int,
+        help="generate only the profile with this pixel size; requires --bpp",
+    )
+    parser.add_argument(
+        "--bpp", type=int, choices=(1, 4),
+        help="generate only the profile with this bit depth; requires --size",
     )
     parser.add_argument(
         "--jobs", type=int, default=1,
@@ -737,19 +752,24 @@ def main() -> int:
         parser.error("--jobs must be at least 1")
     if args.jobs != 1 and args.target not in {"full", "all"}:
         parser.error("--jobs is only supported for the full and all targets")
+    if (args.size is None) != (args.bpp is None):
+        parser.error("--size and --bpp must be used together")
+    if args.size is not None and args.size <= 0:
+        parser.error("--size must be positive")
     manifest = load_json(ROOT / "manifest.json")
-    write_font_bundle_header(manifest)
-    selected = set(args.profile) if args.profile else None
-    if selected is not None:
+    selected = None
+    if args.size is not None:
         if args.target in {"charsets", "emoji", "all"}:
-            parser.error(f"--profile is not supported for the {args.target} target")
-        profile_key = "icon_profiles" if args.target == "icons" else "text_profiles"
-        known = {profile["name"] for profile in manifest[profile_key]}
-        if args.target == "icons":
-            known.update(profile["name"] for profile in manifest["emoji_font_profiles"])
-        unknown = selected - known
-        if unknown:
-            parser.error("unknown profile(s): " + ", ".join(sorted(unknown)))
+            parser.error(f"--size and --bpp are not supported for the {args.target} target")
+        profile_keys = (
+            ["icon_profiles", "emoji_font_profiles"]
+            if args.target == "icons"
+            else ["text_profiles"]
+        )
+        selected = profile_names_for_size(manifest, profile_keys, args.size, args.bpp)
+        if not selected:
+            parser.error(f"no profile matches size={args.size}, bpp={args.bpp}")
+    write_font_bundle_header(manifest)
     BUILD.mkdir(exist_ok=True)
     if args.target in {"icons", "all"}:
         build_material_symbols(manifest, selected)

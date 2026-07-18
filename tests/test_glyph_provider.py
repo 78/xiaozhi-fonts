@@ -10,8 +10,10 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "examples"))
 
 from glyph_provider import CbinFont, FullGlyphProvider  # noqa: E402
+from glyph_push_server import build_glyph_push  # noqa: E402
 
 
 class GlyphProviderTest(unittest.TestCase):
@@ -61,26 +63,80 @@ class GlyphProviderTest(unittest.TestCase):
             shutil.copyfile(self.cbin_path, root / "latin.cbin")
             manifest = {
                 "bundle_id": "test-bundle",
+                "profiles": [{"name": "14_1", "size": 14, "bpp": 1}],
                 "charsets": {
                     "basic": {"codepoints": [ord("A")]},
                     "common": {"codepoints": []},
                 },
-                "shards": [{
-                    "id": "latin",
-                    "ranges": [[0x20, 0x7E]],
-                    "profiles": {"14_1": "latin.cbin"},
-                }],
+                "shards": [
+                    {
+                        "id": "latin",
+                        "ranges": [[0x20, 0x7E]],
+                        "profiles": {"14_1": "latin.cbin"},
+                    }
+                ],
             }
             path = root / "manifest.json"
             path.write_text(json.dumps(manifest), encoding="utf-8")
             provider = FullGlyphProvider(path)
 
+            self.assertTrue(provider.supports("test-bundle", "basic", 14, 1))
+            self.assertFalse(provider.supports("other-bundle", "basic", 14, 1))
+            with self.assertRaisesRegex(ValueError, "unsupported font profile"):
+                provider.payload_for_text("A", 20, 4, "common")
             self.assertIsNone(provider.payload_for_text("A", 14, 1, "basic"))
             payload = provider.payload_for_text("AA", 14, 1, "common")
             self.assertEqual(payload["size"], 14)
             self.assertEqual(payload["bpp"], 1)
             self.assertNotIn("profile", payload)
-            self.assertEqual([item["codepoint"] for item in payload["items"]], [ord("A")])
+            self.assertEqual([glyph["codepoint"] for glyph in payload["glyphs"]], [ord("A")])
+
+            device_capabilities = {
+                "features": {"glyph_push": True},
+                "text_font": {
+                    "bundle": "test-bundle",
+                    "charset": "common",
+                    "size": 14,
+                    "bpp": 1,
+                },
+            }
+            self.assertEqual(
+                build_glyph_push(provider, device_capabilities, "A")["glyphs"][0]["codepoint"],
+                ord("A"),
+            )
+            device_capabilities["features"]["glyph_push"] = 1
+            self.assertIsNone(build_glyph_push(provider, device_capabilities, "A"))
+
+    def test_provider_limits_one_payload_to_sixty_four_glyphs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copyfile(self.cbin_path, root / "latin.cbin")
+            manifest = {
+                "bundle_id": "test-bundle",
+                "profiles": [{"name": "14_1", "size": 14, "bpp": 1}],
+                "charsets": {
+                    "basic": {"codepoints": []},
+                    "common": {"codepoints": []},
+                },
+                "shards": [
+                    {
+                        "id": "latin",
+                        "ranges": [[0x20, 0x7E]],
+                        "profiles": {"14_1": "latin.cbin"},
+                    }
+                ],
+            }
+            path = root / "manifest.json"
+            path.write_text(json.dumps(manifest), encoding="utf-8")
+            provider = FullGlyphProvider(path)
+            payload = provider.payload_for_text(
+                "".join(chr(codepoint) for codepoint in range(0x20, 0x7F)),
+                14,
+                1,
+                "common",
+            )
+            self.assertEqual(len(payload["glyphs"]), 64)
+
 
 if __name__ == "__main__":
     unittest.main()

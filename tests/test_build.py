@@ -42,6 +42,17 @@ class BuildTest(unittest.TestCase):
         profile = next(item for item in manifest["icon_profiles"] if item["name"] == "14_1")
         self.assertEqual((profile["line_height"], profile["base_line"]), (16, 2))
 
+    def test_profile_selection_uses_size_and_bpp(self):
+        manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            BUILD.profile_names_for_size(manifest, ["text_profiles"], 14, 1),
+            {"14_1"},
+        )
+        self.assertEqual(
+            BUILD.profile_names_for_size(manifest, ["text_profiles"], 14, 4),
+            set(),
+        )
+
     def test_generated_oled_icons_fit_fourteen_pixel_advance(self):
         source = (ROOT / "src" / "font_material_symbols_14_1.c").read_text(
             encoding="utf-8"
